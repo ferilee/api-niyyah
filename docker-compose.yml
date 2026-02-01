@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  api-niyyah:
+    image: ghcr.io/ferilee/api-niyyah:latest
+    container_name: api-niyyah
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
