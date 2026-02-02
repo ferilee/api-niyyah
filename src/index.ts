@@ -4,6 +4,31 @@ import db from "./db";
 
 const app = new Hono();
 
+const defaultStats = JSON.stringify({
+    completedHabits: 0,
+    totalHabits: 0,
+    journalHistoryLength: 0,
+    khatamProgress: 0,
+    khatamLevel: 0,
+    todayPages: 0,
+    todayVerses: 0,
+    lastUpdated: null,
+    dailyHabits: [],
+    todayJournal: {
+        mood: "",
+        goal: "",
+        gratitude: "",
+    },
+    moodDistribution: {
+        happy: 0,
+        grateful: 0,
+        calm: 0,
+        sad: 0,
+        stressed: 0,
+    },
+    weeklyCompletions: {},
+});
+
 app.use("/*", cors());
 
 // Root route
@@ -75,11 +100,12 @@ app.get("/users/:id", (c) => {
 // Create user
 app.post("/users", async (c) => {
     try {
-        const { nama, jenis_kelamin, username, password } = await c.req.json();
+        const { nama, jenis_kelamin, username, password, stats } = await c.req.json();
+        const statsValue = typeof stats === "string" && stats.length ? stats : defaultStats;
         if (!nama || !jenis_kelamin || !username || !password) {
             return c.json({ message: "Nama, jenis_kelamin, username, and password are required" }, 400);
         }
-        const result = db.query("INSERT INTO users (nama, jenis_kelamin, username, password) VALUES (?, ?, ?, ?) RETURNING id").get(nama, jenis_kelamin, username, password) as { id: number };
+        const result = db.query("INSERT INTO users (nama, jenis_kelamin, username, password, stats) VALUES (?, ?, ?, ?, ?) RETURNING id").get(nama, jenis_kelamin, username, password, statsValue) as { id: number };
         return c.json({ message: "User created", data: { id: result.id, nama, jenis_kelamin, username } }, 201);
     } catch (error: any) {
         if (error.message && error.message.includes("UNIQUE constraint failed")) {
